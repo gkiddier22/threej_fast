@@ -25,9 +25,17 @@ L_MAX = 1996  # Maximum multipole moment
 MASK_FILE_1 = "./COM_Mask_Likelihood-polarization-143-hm1_2048_R3.00.fits"
 MASK_FILE_2 = "./COM_Mask_Likelihood-polarization-143-hm2_2048_R3.00.fits"
 C_PROGRAM = "../src/thrj_220_opt"  # Path to the compiled C program
-OUTPUT_MATRIX_FILE = "../results/coupling_matrix_EE_opt.dat"  # Output binary file for the matrix
-PLOT_SAVE_PATH = "../results/coupling_matrix_EE_opt.png"  # Output path for the plot
+RESULTS_DIR = "../results"  # Results directory
 SPECTRUM_TYPE = "EE" 
+
+# Ensure results directory exists
+os.makedirs(RESULTS_DIR, exist_ok=True)
+
+# Output file paths
+WINDOW_FILE = os.path.join(RESULTS_DIR, f"w_l_{2*L_MAX}_{SPECTRUM_TYPE}.dat")
+OUTPUT_MATRIX_FILE = os.path.join(RESULTS_DIR, f"coupling_matrix_{SPECTRUM_TYPE}_opt.dat")
+PLOT_SAVE_PATH = os.path.join(RESULTS_DIR, f"coupling_matrix_{SPECTRUM_TYPE}_opt.png")
+
 
 # ---- Step 1: Compute Mask Window Function ----
 def compute_mask_window_function(lmax, mask1_path, mask2_path):
@@ -129,10 +137,10 @@ def plot_coupling_matrix(matrix_file, lmax, save_path):
 # ---- Main Execution ----
 if __name__ == "__main__":
     # Compute the window function
-    wl, wl_filename = compute_mask_window_function(L_MAX, MASK_FILE_1, MASK_FILE_2)
+    compute_mask_window_function(L_MAX, MASK_FILE_1, MASK_FILE_2, WINDOW_FILE)
 
     # Run the C program to compute the coupling matrix
-    run_c_program(C_PROGRAM, wl_filename, OUTPUT_MATRIX_FILE, L_MAX, SPECTRUM_TYPE)
+    run_c_program(C_PROGRAM, WINDOW_FILE, OUTPUT_MATRIX_FILE, L_MAX, SPECTRUM_TYPE)
 
     # Plot and save the coupling matrix
     plot_coupling_matrix(OUTPUT_MATRIX_FILE, L_MAX, PLOT_SAVE_PATH)
