@@ -48,7 +48,7 @@ conda activate 3j_env
 
 ### 4. Run example code 
 ```bash
-python tests/coupling_mat_example.py
+python tests/coupling_mat_example_EE.py
 ```
 This script will:
 - Load input window function data from the data/ directory
