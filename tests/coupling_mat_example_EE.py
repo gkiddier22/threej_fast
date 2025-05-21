@@ -15,7 +15,6 @@ License: [Specify License]
 import numpy as np
 import healpy as hp
 import matplotlib.pyplot as plt
-import seaborn as sns
 import subprocess
 import os
 import sys
