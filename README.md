@@ -47,6 +47,8 @@ conda activate 3j_env
 ```
 
 ### 4. Run example code 
+Change the pathnames for the variables `MASK_FILE_1` and `MASK_FILE_2` in the file `coupling_mat_example_EE.py` to .fits files containing the masks. Then run the script:
+
 ```bash
 python tests/coupling_mat_example_EE.py
 ```
