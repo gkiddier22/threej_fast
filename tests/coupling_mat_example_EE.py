@@ -38,7 +38,7 @@ PLOT_SAVE_PATH = os.path.join(RESULTS_DIR, f"coupling_matrix_{SPECTRUM_TYPE}_opt
 
 
 # ---- Step 1: Compute Mask Window Function ----
-def compute_mask_window_function(lmax, mask1_path, mask2_path):
+def compute_mask_window_function(lmax, mask1_path, mask2_path, window_filename):
     """
     Computes the window function from two HEALPix mask files.
 
