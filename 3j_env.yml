@@ -1,0 +1,14 @@
+name: 3j_env
+channels:
+  - conda-forge
+  - defaults
+
+dependencies:
+  - python=3.10
+  - numpy
+  - matplotlib
+  - healpy
+  - gcc                # includes C compiler
+  - gfortran           # Fortran compiler
+  - make               # for building C/Fortran code
+  - pip
