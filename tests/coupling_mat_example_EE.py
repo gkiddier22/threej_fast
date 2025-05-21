@@ -56,7 +56,7 @@ def compute_mask_window_function(lmax, mask1_path, mask2_path):
 
     print("Computing the window function...")
     mask_cl = hp.anafast(mask_1, map2=mask_2, lmax=2*lmax, use_pixel_weights=True)
-    window_filename = "./results" + f"w_l_{2*lmax}_{SPECTRUM_TYPE}.dat"
+    window_filename = "./results/" + f"w_l_{2*lmax}_{SPECTRUM_TYPE}.dat"
     
     mask_cl.tofile(window_filename)
     print(f"Window function saved to {window_filename}")
