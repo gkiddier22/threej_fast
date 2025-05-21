@@ -2,16 +2,25 @@
 
 Efficient OpenMP-parallelized computation of Wigner 3j symbol-based mode-coupling matrices for CMB analysis.
 
-This repository provides a lightweight, high-performance C implementation for generating mode-coupling matrices \( K^{EE} \) and \( K^{TT} \), using Wigner 3j symbols. It is designed for speed and portability, and includes example usage through a Python script.
+This repository provides a lightweight, high-performance C implementation for generating mode-coupling matrices $K^{EE}$ and $K^{TT}$, using Wigner 3j symbols. It is designed for speed and portability, and includes example usage through a Python script.
 
 ## 🔧 Contents
-
-- `thrj_220_opt.c`: Optimized C code using OpenMP (recommended for Linux)
-- `thrj_000_opt.c`: Compatible version without OpenMP (for macOS/Clang)
-- `tests/coupling_mat_example.py`: Example script for generating and plotting coupling matrices
-- `data/`: Directory for input window functions and output matrices
-- `3j_env.yml`: Conda environment file for Python dependencies
-- `citation.cff`: Citation metadata for referencing this work
+```bash
+threej_fast/
+├── src/
+│   ├── thrj_000_opt.c         # Computes scalar 3j symbols
+│   └── thrj_220_opt.c         # Computes spin-2 3j symbols (EE-like)
+│
+├── tests/
+│   └── coupling_mat_example.py  # Example script using thrj_XXX_opt
+│
+├── data/                      # Folder for any example input data files
+│
+├── Makefile                   # Builds both C programs with OpenMP
+├── 3j_env.yml                 # Conda environment file
+├── citation.cff              # Citation metadata
+└── README.md                  # Project overview and usage
+```
 
 ## 🚀 Getting Started
 
@@ -34,7 +43,7 @@ This will build:
  ### 3. Python environment (optional for plotting and testing)
  ```bash
 conda env create -f 3j_env.yml
-conda activate threej_env
+conda activate 3j_env
 ```
 
 ### 4. Run example code 
