@@ -24,9 +24,9 @@ from matplotlib.colors import LogNorm
 L_MAX = 1996  # Maximum multipole moment
 MASK_FILE_1 = "./COM_Mask_Likelihood-polarization-143-hm1_2048_R3.00.fits"
 MASK_FILE_2 = "./COM_Mask_Likelihood-polarization-143-hm2_2048_R3.00.fits"
-C_PROGRAM = "./src/thrj_220_opt"  # Path to the compiled C program
-OUTPUT_MATRIX_FILE = "./results/coupling_matrix_EE_opt.dat"  # Output binary file for the matrix
-PLOT_SAVE_PATH = "./results/coupling_matrix_EE_opt.png"  # Output path for the plot
+C_PROGRAM = "../src/thrj_220_opt"  # Path to the compiled C program
+OUTPUT_MATRIX_FILE = "../results/coupling_matrix_EE_opt.dat"  # Output binary file for the matrix
+PLOT_SAVE_PATH = "../results/coupling_matrix_EE_opt.png"  # Output path for the plot
 SPECTRUM_TYPE = "EE" 
 
 # ---- Step 1: Compute Mask Window Function ----
