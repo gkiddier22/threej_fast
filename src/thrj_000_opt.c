@@ -121,11 +121,13 @@ int main(int argc, char *argv[]) {
       
         }
     }
+    #pragma omp parallel for collapse(2)
     for (int i = 0; i < lmax + 1; i++) {
         for (int j = i ; j < lmax + 1; j++) {  // j = i + 1 avoids unnecessary self-copy
             m[j * (lmax + 1) + i] = m[i * (lmax + 1) + j];  // Copy upper triangle to lower triangle
         }
     }
+    #pragma omp parallel for collapse(2)
     for (int i = 0; i < lmax + 1; i++) {
         for (int j = 0; j < lmax + 1; j++) {
             m[i * (lmax + 1) + j] *= (2. * j + 1.);
