@@ -1,72 +1,88 @@
+/*
+ * thrj_220_opt.c
+ * 
+ * Description: Optimized C code for calculating the coupling matrix for CMB polarisation maps
+ * Author: Georgia Kiddier
+ * Date: 18-02-2025
+ * License: MIT (or specify your chosen license)
+ * 
+ * Compilation:
+ *     /opt/homebrew/bin/gcc-14 -O3 -march=native -o thrj_220_opt thrj_220_opt.c -lm -ffast-math
+ * 
+ * Usage:
+ *     ./thrj_220_opt <power_spectrum_file> <output_matrix_file> <lmax>
+ * 
+ * This program computes the coupling matrix M_l1l2 using precomputed 3j symbols.
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
 #include <time.h>
 #include <string.h>
 
+// Global variable to store the maximum multipole
 int lmax;
 
-
+/*
+ * Function to calculate the 3j symbol (0 0 0) using precomputed arrays.
+ */
 double calculate_threej_000(int J, int J1minus, int J2minus, int J3minus, double* one_jp1, double* g, double* one_g) {
-    if (J % 2 == 0) {
-        //return pow(-1, J / 2) * sqrt(one_jp1[J] * g[J1minus / 2] * g[J2minus / 2] * g[J3minus / 2] * one_g[J / 2]);
+    //if (J % 2 == 0) { // 3j symbol is nonzero only if J is even
+
         int half_J1minus = J1minus / 2;
         int half_J2minus = J2minus / 2;
         int half_J3minus = J3minus / 2;
         int half_J = J / 2;
-        //return sqrt(one_jp1[J] * g[J1minus / 2] * g[J2minus / 2] * g[J3minus / 2] * one_g[J / 2]);
-        return pow(-1, J / 2) * sqrt(one_jp1[J] * g[half_J1minus] * g[half_J2minus] * g[half_J3minus] * one_g[half_J]);
-    }else{
-        printf("Error: J is odd\n");
-        return 0.0;
-    }
+
+        double sign = (half_J % 2) ? -1.0 : 1.0;
+        return sign * sqrt(one_jp1[J] * g[half_J1minus] * g[half_J2minus] * g[half_J3minus] * one_g[half_J]);
 }
 
-// Function to calculate 3j (0,-2,2) symbol depending on even or odd J
-double calculate_threej_022(double j1, double j2, double j3, double* one_jp1, double* g, double* one_g) {
+
+/*
+ * Function to calculate the 3j symbol (0 -2 2) using precomputed arrays.
+ */
+double calculate_threej_022_alt(int j1, int j2, int j3, int J, int J1minus, int J2minus, int J3minus, double* one_jp1, double* g, double* one_g, double* one_r_j) {
     double threej_022 = 0.0;
-    double J = j1 + j2 + j3;
-    double J1minus = -j1 + j2 + j3;
-    double J2minus = j1 - j2 + j3;
-    double J3minus = j1 + j2 - j3;
-    if ((int)J % 2 == 0) {  // J is even
+    double lmbda = sqrt(j2*(j2+1.)*(j3+1.)*(j3+2.));
 
 
-        double pref_1 =  1. / sqrt((j2-1.)*(j2+2.)*(j3-1.)*j3);
-        double pref_2_1 = sqrt(j2*(j2+1.)*(j3+1.)*(j3+2.));
-        double pref_2 = 2.*sqrt((j2+1)*(j3+1)*(j3+2)/j2);
-        double pref_3 = 1. - (0.5*((J+2)*(J1minus+1.)/((j2+1.)*(j3+1.))));
-        double pref_5 = 0.5 * sqrt((J+2.)*(J1minus+1.)*(J2minus+1.)*(J3minus)*(J+3.)*(J1minus+2.)*(J2minus+2.)*(J3minus-1.)/(j2*(j2+1.)*(j3+1.)*(j3+2.)));
+    int J2MP1 = J2minus + 1;
+    int J3MM1 = J3minus - 1;
 
-        double threej_000 = calculate_threej_000((int)J, (int)J1minus, (int)J2minus, (int)J3minus, one_jp1, g, one_g);
+        double pref_1 = one_r_j[(j2-1)] *one_r_j[(j2+2)] * one_r_j[(j3-1)] * one_r_j[j3];
         
-        double threej_000_2 = calculate_threej_000((int)J+2, (int)J1minus+2, (int)J2minus+2, (int)J3minus-2, one_jp1, g, one_g);
+        double pref_2_1 = lmbda;
+        
+        double pref_2 = 2. * lmbda * one_jp1[(j2-1)];
+   
+        double lmbda2 = (J+2)*(J1minus+1);
+   
+        double pref_3 = 1. - 0.5 * lmbda2 * one_jp1[j2] * one_jp1[j3];
+        
+        double pref_5 = 0.5 * sqrt(lmbda2*(J2MP1)*(J3minus)*(J+3.)*(J1minus+2.)*(J2minus+2.)*(J3MM1)) / lmbda;
+       
+        double threej_000 = calculate_threej_000(J, J1minus, J2minus, J3minus, one_jp1, g, one_g);
+        
+        double threej_000_2 = calculate_threej_000(J+2, J1minus+2, J2minus+2, J3minus-2, one_jp1, g, one_g);
 
         threej_022 = pref_1 * (((pref_2_1 + (pref_2 * pref_3))*threej_000) + (pref_5 * threej_000_2));
-    } else {  // J is odd
 
-        double pref_0 = sqrt((J + 2.0) * (J1minus + 1.0) * (J2minus + 1.0) * J3minus) / sqrt((j2 - 1.0) * (j2 + 2.0) * (j3 - 1.0) * j3);
-        double pref_1 = sqrt((j3 + 2.0) / (j2 * (j2 + 1.0) * (j3 + 1.0)));
-        double pref_2 = sqrt((j2 + 1.0) * (j3 + 2.0) / (j2 * (j3 + 1.0)));
-        double pref_3 = -0.5 * sqrt((J + 3.0) * (J + 4.0) * (J1minus + 2.0) * (J1minus + 3.0) / (j2 * (j2 + 1.0) * (j3 + 1.0) * (j3 + 2.0)));
-
-        //double threej_000_1 = calculate_threej_000(j1, j2, j3 + 1, one_jp1, g, one_g);
-        double threej_000_1 = calculate_threej_000((int)J+1, (int)J1minus+1, (int)J2minus+1, (int)J3minus-1, one_jp1, g, one_g);
-        //double threej_000_2 = calculate_threej_000(j1, j2 + 1, j3 + 2, one_jp1, g, one_g);
-        double threej_000_2 = calculate_threej_000((int)J+3, (int)J1minus+3, (int)J2minus+1, (int)J3minus-1, one_jp1, g, one_g);
-
-        threej_022 = pref_0 * ((-1.0 * (pref_1 + pref_2) * threej_000_1) + (pref_3 * threej_000_2));
-        //threej_022 = -1.0 * pref_0 * (( -1.0 * (pref_1 + pref_2) * threej_000_1) + (pref_3 * threej_000_2));
-    }
     return threej_022;
-    //return (pow(-1, - j1 + j2 - 2) * threej_022);
+    
 }
 
 int main(int argc, char *argv[]) {
+    if (argc < 5) {
+        fprintf(stderr, "Usage: %s <input_file> <output_file> <lmax> <pol> <write_output (yes/no)>\n", argv[0]);
+        return 1;
+    }
      
     lmax=atoi(argv[3]);
     int nlr;
     char *pol = argv[4];
+    char *write_output = argv[5];
     FILE *fpw;
     FILE *fpm;
 
@@ -76,7 +92,13 @@ int main(int argc, char *argv[]) {
     double *g = (double*) calloc(2 * lmax + 1, sizeof(double));
     double *one_g = (double*) calloc(2 * lmax + 1, sizeof(double));
     double *one_jp1 = (double*) calloc(4 * lmax + 1, sizeof(double));
+    double *one_r_j = (double*) calloc((2*lmax)*(2*lmax), sizeof(double));
     double* m=(double*) calloc((lmax+1)*(lmax+1),sizeof(double));
+
+    if (!wl || !lnjp1 || !lng || !g || !one_g || !one_jp1 || !one_r_j || !m) {
+    fprintf(stderr, "Memory allocation failed!\n");
+    return -1;
+    }
 
     //Read in power spectrum 
     fpw=fopen(argv[1],"rb");
@@ -87,6 +109,7 @@ int main(int argc, char *argv[]) {
         return -1;  
     }   
     fclose(fpw);    
+    //printf("lmax*lmax: %d\n", lmax*lmax);
 
     // Validate the mode
     if (strcmp(pol, "EE") != 0 && strcmp(pol, "EB") != 0) {
@@ -99,11 +122,16 @@ int main(int argc, char *argv[]) {
         lnjp1[i] = log(i + 1.0);
         one_jp1[i] = 1.0 / (i + 1.0);
     }
+
+    one_r_j[0] = 0.0;
+    for (int i = 1; i < lmax*lmax; i++) {
+        //cache 1/sqrt(J)
+        one_r_j[i] = 1.0 / sqrt(i);
+    }
     
     lng[0] = 0.0;
     for (int i = 1; i < 2 * lmax + 1; i++) {
         lng[i] = lng[i - 1] + log((i - 0.5) / i);
-        //g[i] = exp(lng[i]);
         one_g[i] = exp(-lng[i]);
     }
 
@@ -111,73 +139,84 @@ int main(int argc, char *argv[]) {
         g[i] = exp(lng[i]);
     }
 
+    #define MAX(a, b) ((a) > (b) ? (a) : (b))
+
     double j1, j2, j3, j3_sum,pref;
     int J, J1minus, J2minus, J3minus;
+    int size = (lmax + 1) * (lmax + 1);
 
     clock_t start, end;
     double cpu_time_used;
+
     // Calculating matrix M_l1l2 , dimensions j1xj2 = lmax * lmax
+    
     start = clock();
-    // For j1 > j2
-    // Start at 2 as -l1 <=  m1 <= l1
-    //#pragma omp parallel for schedule(dynamic) private(j1, j2, j3, j3_sum, pref)
+    double scale_factor = M_1_PI * 0.0625;
+
+    #pragma omp parallel for private(j1, j2, j3, J, J1minus, J2minus, J3minus, pref, j3_sum) \
+    shared(m, wl, one_jp1, g, one_g) \
+    schedule(dynamic)
     for(int i = 2; i < lmax + 1 ; i++) {
-        for(int k = i;  k < lmax + 1; k++){
-            j1 = (double)i;
-            j2 = (double)k;
+        for(int k = MAX(2, i);  k < lmax + 1; k++){
 
             j3_sum = 0.;
+            int jbase = i + k;
 
-            for(int l = abs(i-k); l < i+k+1 ; l++){  //is this right for j3????
-                j3 = (double)l;
-                //printf("ORIGINAL ---> j1, j2, j3: %d, %d, %d\n", i, k, l);
+            for(int l = abs(i-k); l < jbase+1 ; l++){  
+                // j3 = (double)l;
+                double threej_022 = 0.0;
+                //Permutation necessary as we need (-2,2,0) symbol; function computes (0,-2,2)
 
-                //Permutation
-                int tempj1 = i; // Store j1 temporarily
-                j1 = l;   
-                j3 = k;   
-                j2 = tempj1; 
-
-                if(j3>=2){
+                    J = jbase + l;
+                    //Only get symbol if J is even
+                    if (J % 2 == 0) {
+                        J1minus = -l + jbase;
+                        J2minus = l - i + k;
+                        J3minus = l + i - k;
                     
-                    double threej_022 = calculate_threej_022(j1, j2, j3, one_jp1, g, one_g);
-        
-                    // positive sign for KEE, negative sign for KEB
-                    //if(strcmp(pol, "EE") == 0){
-                    //int parity = (int)(j1 + j2 + j3) % 2;
-                    //pref = ((2 * l) + 1) * wl[l] * (parity == 0 ? 4 : 0);
-                    pref = ((2 * l) + 1) * wl[(int)l] * pow((1 + pow(-1,(j1+j2+j3))),2);
-                    j3_sum+= (pref * threej_022 * threej_022);
-                }
+                        threej_022 = calculate_threej_022_alt(l, i, k, J, J1minus, J2minus, J3minus, one_jp1, g, one_g, one_r_j);
+                    
+                        pref = ((2 * l) + 1) * wl[l] * 4;
+                        j3_sum+= (pref * threej_022 * threej_022);
+                    
+                    }
             }
-            
-            m[i*(lmax+1)+k] =  j3_sum *  M_1_PI / 16.0;
+            m[i*(lmax+1)+k] =  j3_sum * scale_factor;
+      
         }
     }
 
-    for(int i=0 ; i<lmax+1 ; i++) {
-        for (int j=i ; j < lmax+1 ; j++) {
-            m[j*(lmax+1)+i]=m[i*(lmax+1)+j];
+
+    #pragma omp parallel for collapse(2)
+    for (int i = 0; i < lmax + 1; i++) {
+        for (int j = i + 1; j < lmax + 1; j++) {  // j = i + 1 avoids unnecessary self-copy
+            m[j * (lmax + 1) + i] = m[i * (lmax + 1) + j];  // Copy upper triangle to lower triangle
         }
     }
-    for(int i=0;i<lmax+1;i++) {
-        for (int j=0;j<lmax+1;j++) {
-            m[i*(lmax+1)+j]*=(2.*j+1.);  // is it quicker to multiply the entire row as they all have the same l2 ? 
-        }
+    #pragma omp parallel for collapse(2)
+    for (int idx = 0; idx < size; idx++) {
+        int j = idx % (lmax + 1);
+        m[idx] *= (2. * j + 1.);
     }
+
 
     end = clock();
     cpu_time_used = ((double)(end - start)) / CLOCKS_PER_SEC;
 
-    printf("CPU time used : %g\n", cpu_time_used);
 
-    fpm=fopen(argv[2],"wb");
-    if (fpm == NULL) {
-        perror("Error opening file");
-        return 1;
+     // Write to file only if user requested
+    if (strcmp(write_output, "yes") == 0) {
+        FILE *fpm = fopen(argv[2], "wb");
+        if (!fpm) {
+            perror("Error opening output file");
+            free(wl);
+            free(m);
+            return 1;
+        }
+        fwrite((void*)m, sizeof(double), (lmax+1)*(lmax+1), fpm);
+        fclose(fpm);
+        printf("Matrix written to %s.\n", argv[2]);
     }
-    fwrite((void*)m,sizeof(double),(lmax+1)*(lmax+1),fpm);
-    fclose(fpm);
 
     // Free allocated memory
     free(lnjp1);
@@ -185,7 +224,7 @@ int main(int argc, char *argv[]) {
     free(g);
     free(one_g);
     free(one_jp1);
+    free(one_r_j);
 
     return 0;
 }
-

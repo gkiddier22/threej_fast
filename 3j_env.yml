@@ -9,4 +9,3 @@ dependencies:
   - matplotlib
   - healpy
   - make               # for building C/Fortran code
-  - pip
