@@ -24,8 +24,29 @@
 // Global variable to store the maximum multipole
 int lmax;
 
-/*
- * Function to calculate the 3j symbol (0 0 0) using precomputed arrays.
+/**
+ * @brief Computes the Wigner 3j symbol for the configuration (0, 0, 0).
+ *
+ * This function evaluates the Wigner 3j symbol:
+ * \[
+ * \begin{pmatrix}
+ * j_1 & j_2 & j_3 \\
+ * 0   & 0   & 0
+ * \end{pmatrix}
+ * \]
+ * using precomputed arrays to minimize computational cost. It assumes that the triangle
+ * conditions are satisfied and that the total angular momentum quantum number \( J = j_1 + j_2 + j_3 \)
+ * is even, which is a necessary condition for the symbol to be nonzero.
+ *
+ * @param J         The sum \( j_1 + j_2 + j_3 \), assumed to be even.
+ * @param J1minus   The value \( -j_1 + j_2 + j_3 \).
+ * @param J2minus   The value \( j_1 - j_2 + j_3 \).
+ * @param J3minus   The value \( j_1 + j_2 - j_3 \).
+ * @param one_jp1   Array containing \( \frac{1}{2j+1} \) values for normalization.
+ * @param g         Array containing factorial-related values: \( g(n) = n! \).
+ * @param one_g     Array containing \( \frac{1}{g(n)} = \frac{1}{n!} \).
+ *
+ * @return The computed Wigner 3j symbol for (0, 0, 0).
  */
 double calculate_threej_000(int J, int J1minus, int J2minus, int J3minus, double* one_jp1, double* g, double* one_g) {
     //if (J % 2 == 0) { // 3j symbol is nonzero only if J is even
